@@ -1,9 +1,7 @@
 import OpenAI from 'openai';
 
 // OpenRouter API config
-const OPENROUTER_API_KEY =
-  process.env.OPENROUTER_API_KEY ||
-  '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_API_URL =
   process.env.OPENROUTER_API_URL || 'https://openrouter.ai/api/v1';
 
