@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 
@@ -20,6 +21,8 @@ interface TarotReading {
 }
 
 export default function HistoryPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [fortunes, setFortunes] = useState<FortuneHistory[]>([]);
   const [tarotReadings, setTarotReadings] = useState<TarotReading[]>([]);
@@ -79,6 +82,11 @@ export default function HistoryPage() {
 
   const homeHref = isLoggedIn ? '/dashboard' : '/';
 
+  useEffect(() => {
+    router.prefetch(homeHref);
+  }, [homeHref, router]);
+
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -88,12 +96,12 @@ export default function HistoryPage() {
             Arcane Oracle
           </Link>
           <div className="flex gap-4">
-            <Link
-              href={homeHref}
+            <button
+              onClick={() => router.push(homeHref)}
               className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
             >
               Return Home
-            </Link>
+            </button>
             <Link
               href="/dashboard"
               className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
