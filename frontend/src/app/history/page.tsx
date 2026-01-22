@@ -25,6 +25,8 @@ export default function HistoryPage() {
   const [tarotReadings, setTarotReadings] = useState<TarotReading[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'tarot'>('chat');
   const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
 
 
   const fetchHistory = async () => {
@@ -52,6 +54,12 @@ export default function HistoryPage() {
     fetchHistory();
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+
   const handleDelete = async (type: 'fortune' | 'tarot', id: number) => {
     try {
       const token = localStorage.getItem('token');
@@ -69,6 +77,9 @@ export default function HistoryPage() {
     }
   };
 
+  const homeHref = isLoggedIn ? '/dashboard' : '/';
+
+
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
@@ -78,7 +89,7 @@ export default function HistoryPage() {
           </Link>
           <div className="flex gap-4">
             <Link
-              href="/"
+              href={homeHref}
               className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
             >
               Return Home

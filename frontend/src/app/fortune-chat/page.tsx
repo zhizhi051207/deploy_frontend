@@ -64,6 +64,8 @@ export default function FortuneChatPage() {
     }
   };
 
+  const homeHref = isLoggedIn ? '/dashboard' : '/';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
@@ -140,7 +142,7 @@ export default function FortuneChatPage() {
           </Link>
           <div className="flex gap-4">
             <Link
-              href="/"
+              href={homeHref}
               className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
             >
               Return Home

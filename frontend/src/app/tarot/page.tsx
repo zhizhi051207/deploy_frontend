@@ -121,6 +121,8 @@ export default function TarotPage() {
     setInterpretation('');
   };
 
+  const homeHref = isLoggedIn ? '/dashboard' : '/';
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navigation */}
@@ -131,7 +133,7 @@ export default function TarotPage() {
           </Link>
           <div className="flex gap-4">
             <Link
-              href="/"
+              href={homeHref}
               className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
             >
               Return Home
