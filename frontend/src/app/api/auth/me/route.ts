@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { prisma } from '@/lib/db';
 import {
   getCurrentUserFromRequest,
   createAuthResponse,
@@ -10,79 +10,105 @@ import { User } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
-    // 获取当前用户
     const currentUser = getCurrentUserFromRequest(request);
 
     if (!currentUser) {
-      return createAuthResponse('未授权，请先登录');
+      return createAuthResponse('Unauthorized. Please sign in.');
     }
 
-    // 从数据库获取用户详细信息
-    const { data: user, error } = await supabaseAdmin
-      .from('users')
-      .select('id, username, email, birth_date, birth_time, gender, created_at, updated_at')
-      .eq('id', currentUser.userId)
-      .single();
-
-    if (error || !user) {
-      return createAuthResponse('用户不存在');
-    }
-
-    return createSuccessResponse({
-      user: user as User,
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(currentUser.userId) },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        birth_date: true,
+        birth_time: true,
+        gender: true,
+        created_at: true,
+        updated_at: true,
+      },
     });
+
+    if (!user) {
+      return createAuthResponse('User not found');
+    }
+
+    const formattedUser: User = {
+      id: Number(user.id),
+      username: user.username,
+      email: user.email,
+      birth_date: user.birth_date ? user.birth_date.toISOString().split('T')[0] : undefined,
+      birth_time: user.birth_time || undefined,
+      gender: user.gender as any,
+      created_at: user.created_at.toISOString(),
+      updated_at: user.updated_at.toISOString(),
+    };
+
+    return createSuccessResponse({ user: formattedUser });
 
   } catch (error: any) {
     console.error('Get current user error:', error);
-    return createErrorResponse('服务器错误: ' + error.message, 500);
+    return createErrorResponse('Server error: ' + error.message, 500);
   }
 }
 
-// 更新用户信息
 export async function PUT(request: NextRequest) {
   try {
-    // 获取当前用户
     const currentUser = getCurrentUserFromRequest(request);
 
     if (!currentUser) {
-      return createAuthResponse('未授权，请先登录');
+      return createAuthResponse('Unauthorized. Please sign in.');
     }
 
     const body = await request.json();
     const { birth_date, birth_time, gender } = body;
 
-    // 更新用户信息
-    const { error: updateError } = await supabaseAdmin
-      .from('users')
-      .update({
-        birth_date: birth_date || null,
+    await prisma.user.update({
+      where: { id: BigInt(currentUser.userId) },
+      data: {
+        birth_date: birth_date ? new Date(birth_date) : null,
         birth_time: birth_time || null,
         gender: gender || null,
-      })
-      .eq('id', currentUser.userId);
+      },
+    });
 
-    if (updateError) {
-      return createErrorResponse('更新失败: ' + updateError.message, 500);
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(currentUser.userId) },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        birth_date: true,
+        birth_time: true,
+        gender: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    if (!user) {
+      return createErrorResponse('Failed to fetch user profile', 500);
     }
 
-    // 获取更新后的用户信息
-    const { data: user, error: fetchError } = await supabaseAdmin
-      .from('users')
-      .select('id, username, email, birth_date, birth_time, gender, created_at, updated_at')
-      .eq('id', currentUser.userId)
-      .single();
-
-    if (fetchError || !user) {
-      return createErrorResponse('获取用户信息失败', 500);
-    }
+    const formattedUser: User = {
+      id: Number(user.id),
+      username: user.username,
+      email: user.email,
+      birth_date: user.birth_date ? user.birth_date.toISOString().split('T')[0] : undefined,
+      birth_time: user.birth_time || undefined,
+      gender: user.gender as any,
+      created_at: user.created_at.toISOString(),
+      updated_at: user.updated_at.toISOString(),
+    };
 
     return createSuccessResponse({
-      message: '用户信息更新成功',
-      user: user as User,
+      message: 'Profile updated successfully',
+      user: formattedUser,
     });
 
   } catch (error: any) {
     console.error('Update user error:', error);
-    return createErrorResponse('服务器错误: ' + error.message, 500);
+    return createErrorResponse('Server error: ' + error.message, 500);
   }
 }

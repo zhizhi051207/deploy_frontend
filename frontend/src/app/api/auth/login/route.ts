@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { prisma } from '@/lib/db';
 import {
   verifyPassword,
   generateToken,
@@ -14,58 +14,48 @@ export async function POST(request: NextRequest) {
     const body: LoginRequest = await request.json();
     const { email, password } = body;
 
-    // 验证必填字段
     if (!email || !password) {
-      return createErrorResponse('邮箱和密码为必填项');
+      return createErrorResponse('Email and password are required');
     }
 
-    // 验证邮箱格式
     if (!isValidEmail(email)) {
-      return createErrorResponse('邮箱格式不正确');
+      return createErrorResponse('Invalid email format');
     }
 
-    // 查找用户
-    const { data: userWithPassword, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .limit(1)
-      .single();
+    const userWithPassword = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    if (userError || !userWithPassword) {
-      return createErrorResponse('邮箱或密码错误');
+    if (!userWithPassword) {
+      return createErrorResponse('Incorrect email or password');
     }
 
-    // 验证密码
     const isPasswordValid = await verifyPassword(password, userWithPassword.password_hash);
-
     if (!isPasswordValid) {
-      return createErrorResponse('邮箱或密码错误');
+      return createErrorResponse('Incorrect email or password');
     }
 
-    // 构建用户对象（不包含密码）
     const user: User = {
-      id: userWithPassword.id,
+      id: Number(userWithPassword.id),
       username: userWithPassword.username,
       email: userWithPassword.email,
-      birth_date: userWithPassword.birth_date,
-      birth_time: userWithPassword.birth_time,
-      gender: userWithPassword.gender,
-      created_at: userWithPassword.created_at,
-      updated_at: userWithPassword.updated_at,
+      birth_date: userWithPassword.birth_date ? userWithPassword.birth_date.toISOString().split('T')[0] : undefined,
+      birth_time: userWithPassword.birth_time || undefined,
+      gender: userWithPassword.gender as any,
+      created_at: userWithPassword.created_at.toISOString(),
+      updated_at: userWithPassword.updated_at.toISOString(),
     };
 
-    // 生成Token
     const token = generateToken(user);
 
     return createSuccessResponse({
-      message: '登录成功',
+      message: 'Sign in successful',
       token,
       user,
     });
 
   } catch (error: any) {
     console.error('Login error:', error);
-    return createErrorResponse('服务器错误: ' + error.message, 500);
+    return createErrorResponse('Server error: ' + error.message, 500);
   }
 }

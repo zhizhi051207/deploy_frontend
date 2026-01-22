@@ -9,18 +9,18 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // 检查是否已登录
+    // Check login status
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* 导航栏 */}
+      {/* Navigation */}
       <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-white">
-            神秘AI算命
+            Arcane Oracle
           </div>
           <div className="flex gap-4">
             {isLoggedIn ? (
@@ -29,7 +29,7 @@ export default function HomePage() {
                   href="/dashboard"
                   className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
                 >
-                  控制台
+                  Sanctum
                 </Link>
                 <button
                   onClick={() => {
@@ -39,7 +39,7 @@ export default function HomePage() {
                   }}
                   className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 text-white transition"
                 >
-                  退出登录
+                  Sign Out
                 </button>
               </>
             ) : (
@@ -48,13 +48,13 @@ export default function HomePage() {
                   href="/login"
                   className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
                 >
-                  登录
+                  Sign In
                 </Link>
                 <Link
                   href="/register"
                   className="px-4 py-2 rounded-lg bg-mystic-gradient text-white transition hover:opacity-90"
                 >
-                  注册
+                  Sign Up
                 </Link>
               </>
             )}
@@ -62,29 +62,29 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* 主要内容 */}
+      {/* Main */}
       <main className="flex-1 container mx-auto px-6 py-16">
         {/* Hero Section */}
         <div className="text-center mb-20 fade-in">
           <h1 className="text-6xl font-bold text-white mb-6 animate-float">
-            探索命运的奥秘
+            Unveil the Threads of Fate
           </h1>
           <p className="text-xl text-purple-200 mb-8 max-w-2xl mx-auto">
-            融合传统命理学与现代AI技术，为您提供专业的算命和占卜服务
+            Ancient divination woven with modern AI, delivering guidance for those who seek the unseen.
           </p>
           {!isLoggedIn && (
             <Link
               href="/register"
               className="inline-block px-8 py-4 rounded-lg bg-mystic-gradient text-white text-lg font-semibold hover:opacity-90 transition mystic-glow"
             >
-              立即开始占卜
+              Begin Your Reading
             </Link>
           )}
         </div>
 
-        {/* 功能卡片 */}
+        {/* Feature Cards */}
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* AI对话算命 */}
+          {/* Oracle Chat */}
           <div className="card-hover bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6 mx-auto">
               <svg
@@ -102,20 +102,20 @@ export default function HomePage() {
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-white mb-4 text-center">
-              AI造梦解析
+              Oracle Dialogue
             </h3>
             <p className="text-purple-200 mb-6 text-center">
-              与AI算命大师对话，获得关于事业、感情、财运等方面的专业指导
+              Speak with the AI oracle to unveil insight on love, career, and fortune.
             </p>
             <Link
               href="/fortune-chat"
               className="block w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-center transition"
             >
-              {isLoggedIn ? '开始算命' : '免费体验'}
+              {isLoggedIn ? 'Consult the Oracle' : 'Free Trial'}
             </Link>
           </div>
 
-          {/* 塔罗牌占卜 */}
+          {/* Tarot */}
           <div className="card-hover bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center mb-6 mx-auto">
               <svg
@@ -133,53 +133,53 @@ export default function HomePage() {
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-white mb-4 text-center">
-              塔罗牌占卜
+              Tarot Divination
             </h3>
             <p className="text-purple-200 mb-6 text-center">
-              抽取神秘的塔罗牌，让AI为您解读牌面，指引人生方向
+              Draw sacred cards and let the oracle interpret the path ahead.
             </p>
             <Link
               href="/tarot"
               className="block w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-center transition"
             >
-              {isLoggedIn ? '开始占卜' : '免费体验'}
+              {isLoggedIn ? 'Draw the Cards' : 'Free Trial'}
             </Link>
           </div>
         </div>
 
-        {/* 特点介绍 */}
+        {/* Why Us */}
         <div className="mt-20 text-center">
-          <h2 className="text-3xl font-bold text-white mb-12">为什么选择我们</h2>
+          <h2 className="text-3xl font-bold text-white mb-12">Why Seek Our Circle</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="fade-in">
               <div className="text-4xl mb-4">🤖</div>
-              <h4 className="text-xl font-semibold text-white mb-2">AI智能</h4>
+              <h4 className="text-xl font-semibold text-white mb-2">Arcane AI</h4>
               <p className="text-purple-200">
-                采用先进的DeepSeek AI，结合传统命理知识
+                Advanced intelligence entwined with occult lore.
               </p>
             </div>
             <div className="fade-in" style={{ animationDelay: '0.1s' }}>
               <div className="text-4xl mb-4">🔮</div>
-              <h4 className="text-xl font-semibold text-white mb-2">专业准确</h4>
+              <h4 className="text-xl font-semibold text-white mb-2">Mystic Precision</h4>
               <p className="text-purple-200">
-                基于生辰八字和塔罗牌理论，提供专业解读
+                Grounded in birth charts and tarot doctrine for refined readings.
               </p>
             </div>
             <div className="fade-in" style={{ animationDelay: '0.2s' }}>
               <div className="text-4xl mb-4">📝</div>
-              <h4 className="text-xl font-semibold text-white mb-2">历史记录</h4>
+              <h4 className="text-xl font-semibold text-white mb-2">Chronicles</h4>
               <p className="text-purple-200">
-                保存您的算命历史，随时回顾查看
+                Preserve your readings and revisit them whenever you wish.
               </p>
             </div>
           </div>
         </div>
       </main>
 
-      {/* 页脚 */}
+      {/* Footer */}
       <footer className="bg-black/20 backdrop-blur-md border-t border-white/10 py-8">
         <div className="container mx-auto px-6 text-center text-purple-200">
-          <p>&copy; 2024 AI算命. 仅供娱乐参考.</p>
+          <p>&copy; 2024 Arcane Oracle. For entertainment only.</p>
         </div>
       </footer>
     </div>

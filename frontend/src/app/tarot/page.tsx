@@ -31,19 +31,34 @@ export default function TarotPage() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [isBlurred, setIsBlurred] = useState(false);
 
+
+  const containsChinese = (text: string) => /[\u4e00-\u9fff]/.test(text);
+
+  const getCardSummary = (card: DrawnCard, reversed: boolean) => {
+    const candidate = card.description || (reversed ? card.reversed_meaning : card.upright_meaning);
+    if (candidate && !containsChinese(candidate)) {
+      return candidate;
+    }
+    return reversed
+      ? 'A shadow aspect calling for reflection and release.'
+      : 'A luminous aspect encouraging clarity and forward motion.';
+  };
+
+  const sanitizeEnglish = (text: string) => text.replace(/[\u4e00-\u9fff]/g, '');
+
   useEffect(() => {
-    // 检查登录状态
+    // Check login status
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
 
   const handleDrawCards = async () => {
     if (!question.trim()) {
-      alert('请先输入您想要咨询的问题');
+      alert('Please enter your question first.');
       return;
     }
 
-    // 检查未登录用户的使用次数
+    // Check usage for guests
     let shouldBlur = false;
     if (!isLoggedIn) {
       const tarotUsageCount = parseInt(localStorage.getItem('tarot_usage_count') || '0');
@@ -51,7 +66,7 @@ export default function TarotPage() {
         shouldBlur = true;
         setIsBlurred(true);
       }
-      // 增加使用次数
+      // Increment usage count
       localStorage.setItem('tarot_usage_count', (tarotUsageCount + 1).toString());
     }
 
@@ -75,14 +90,14 @@ export default function TarotPage() {
       const data = await res.json();
 
       if (data.success) {
-        // 模拟抽牌动画延迟
+        // Simulate card draw delay
         setTimeout(() => {
           setDrawnCards(data.cards);
           setInterpretation(data.interpretation);
           setStep('result');
           setLoading(false);
 
-          // 如果需要模糊显示，延迟显示登录提示
+          // If blurred, show sign-in prompt with delay
           if (shouldBlur) {
             setTimeout(() => {
               setShowLoginPrompt(true);
@@ -90,10 +105,10 @@ export default function TarotPage() {
           }
         }, 2000);
       } else {
-        throw new Error(data.error || '抽牌失败');
+        throw new Error(data.error || 'Card draw failed');
       }
     } catch (error: any) {
-      alert(error.message || '抽牌失败，请稍后重试');
+      alert(error.message || 'Card draw failed. Please try again.');
       setLoading(false);
       setStep('question');
     }
@@ -108,46 +123,46 @@ export default function TarotPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* 导航栏 */}
+      {/* Navigation */}
       <nav className="bg-black/20 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-white">
-            神秘AI算命
+            Arcane Oracle
           </Link>
           <div className="flex gap-4">
             <Link
               href="/"
               className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
             >
-              返回主页
+              Return Home
             </Link>
             <Link
               href="/dashboard"
               className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
             >
-              控制台
+              Sanctum
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* 主要内容 */}
+      {/* Main */}
       <main className="flex-1 container mx-auto px-6 py-8 max-w-4xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">塔罗牌占卜</h1>
-          <p className="text-purple-200">让神秘的塔罗牌为您指引方向</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Tarot Divination</h1>
+          <p className="text-purple-200">Let the sacred cards illuminate your path</p>
         </div>
 
-        {/* 输入问题阶段 */}
+        {/* Question step */}
         {step === 'question' && (
           <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8">
             <h2 className="text-2xl font-bold text-white mb-6 text-center">
-              请输入您的问题
+              Enter your question
             </h2>
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="例如：我的事业发展如何？我的感情会顺利吗？"
+              placeholder="e.g., Will my career ascend? How will my love unfold?"
               rows={4}
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:border-purple-500 mb-6 resize-none"
             />
@@ -156,15 +171,15 @@ export default function TarotPage() {
               disabled={!question.trim()}
               className="w-full py-4 bg-mystic-gradient rounded-lg text-white text-lg font-semibold hover:opacity-90 transition disabled:opacity-50 mystic-glow"
             >
-              开始抽牌
+              Draw the Cards
             </button>
           </div>
         )}
 
-        {/* 抽牌中动画 */}
+        {/* Drawing animation */}
         {step === 'drawing' && (
           <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-12 text-center relative" style={{ minHeight: '600px', overflow: 'visible' }}>
-            {/* 多层旋转魔法阵背景 */}
+            {/* Multi-ring magic circle backdrop */}
             <div className="absolute inset-0 flex items-center justify-center opacity-15">
               <div className="w-[500px] h-[500px] border-4 border-purple-500 rounded-full animate-spin-slow"></div>
               <div className="absolute w-[450px] h-[450px] border-4 border-pink-500 rounded-full animate-spin-reverse"></div>
@@ -172,7 +187,7 @@ export default function TarotPage() {
               <div className="absolute w-[350px] h-[350px] border-2 border-pink-400 rounded-full animate-spin-reverse" style={{ animationDuration: '18s' }}></div>
             </div>
 
-            {/* 闪烁的星星粒子 */}
+            {/* Twinkling star particles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               {[...Array(25)].map((_, i) => (
                 <div
@@ -188,7 +203,7 @@ export default function TarotPage() {
               ))}
             </div>
 
-            {/* 能量波纹效果 */}
+            {/* Energy ripple effect */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               {[...Array(3)].map((_, i) => (
                 <div
@@ -204,11 +219,11 @@ export default function TarotPage() {
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-4 relative z-10 animate-pulse">
-              正在为您抽取塔罗牌...
+              The cards are stirring...
             </h2>
-            <p className="text-purple-200 mb-8 relative z-10">请保持内心平静，专注于您的问题</p>
+            <p className="text-purple-200 mb-8 relative z-10">Still your mind and focus on the question</p>
 
-            {/* 3D旋转的塔罗牌圆圈 - 旋转木马效果 */}
+            {/* 3D carousel of tarot cards */}
             <div
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
               style={{
@@ -218,7 +233,7 @@ export default function TarotPage() {
                 height: '100%',
               }}
             >
-              {/* 3D圆圈容器 - 围绕Y轴旋转 */}
+              {/* 3D ring container rotating on Y axis */}
               <div
                 style={{
                   position: 'absolute',
@@ -231,9 +246,9 @@ export default function TarotPage() {
                 }}
               >
                 {[...Array(18)].map((_, index) => {
-                  const angle = (index * 20); // 每张牌间隔20度 (360/18)
-                  const radius = 350; // 增大圆圈半径
-                  const isSelected = index === 4 || index === 9 || index === 14; // 选中3张牌
+                  const angle = (index * 20); // 20 degrees apart (360/18)
+                  const radius = 350; // Larger radius
+                  const isSelected = index === 4 || index === 9 || index === 14; // 3 selected cards
 
                   return (
                     <div
@@ -264,7 +279,7 @@ export default function TarotPage() {
                         🎴
                       </div>
 
-                      {/* 选中时的光环效果 */}
+                      {/* Halo glow for selected cards */}
                       {isSelected && (
                         <>
                           <div
@@ -275,7 +290,7 @@ export default function TarotPage() {
                               zIndex: -1,
                             }}
                           ></div>
-                          {/* 能量粒子爆发 */}
+                          {/* Energy particle burst */}
                           {[...Array(12)].map((_, i) => (
                             <div
                               key={i}
@@ -299,7 +314,7 @@ export default function TarotPage() {
               </div>
             </div>
 
-            {/* 手指指针 - 指向前方中间的牌 */}
+            {/* Hand pointer pointing to the center card */}
             <div
               className="absolute text-6xl z-50 pointer-events-none"
               style={{
@@ -314,7 +329,7 @@ export default function TarotPage() {
               👆
             </div>
 
-            {/* 中心能量球 */}
+            {/* Core energy orb */}
             <div
               className="absolute w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 blur-lg pointer-events-none"
               style={{
@@ -329,7 +344,7 @@ export default function TarotPage() {
             ></div>
 
             <style jsx>{`
-              /* 3D卡片淡入动画 */
+              /* 3D card fade-in */
               @keyframes cardFadeIn {
                 0% {
                   opacity: 0;
@@ -339,7 +354,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 旋转木马动画 - 围绕Y轴旋转 */
+              /* Carousel rotation around Y axis */
               @keyframes rotateCarousel {
                 0% {
                   transform: rotateY(0deg);
@@ -349,7 +364,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 选中卡片旋转木马效果 */
+              /* Selected card emphasis */
               @keyframes selectCardCarousel {
                 0% {
                   transform: scale(1);
@@ -362,7 +377,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 旋转木马光环脉冲 */
+              /* Carousel halo pulse */
               @keyframes glowPulseCarousel {
                 0% {
                   opacity: 0;
@@ -375,7 +390,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 旋转木马粒子爆发 */
+              /* Carousel particle burst */
               @keyframes particleBurstCarousel {
                 0% {
                   opacity: 1;
@@ -387,7 +402,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 3D卡片淡出 */
+              /* 3D card fade-out */
               @keyframes fadeOutCard3D {
                 0% {
                   opacity: 1;
@@ -397,7 +412,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 手指指针出现 */
+              /* Hand pointer appear */
               @keyframes handPointerAppear {
                 0% {
                   opacity: 0;
@@ -409,7 +424,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 手指指针脉冲 */
+              /* Hand pointer pulse */
               @keyframes handPointPulse {
                 0%, 100% {
                   transform: translateY(0);
@@ -419,7 +434,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 旋转木马飞出到最终位置 - 左侧 */
+              /* Carousel fly-out left */
               @keyframes flyOutCarousel1 {
                 0% {
                   opacity: 1;
@@ -431,7 +446,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 旋转木马飞出到最终位置 - 中间 */
+              /* Carousel fly-out center */
               @keyframes flyOutCarousel2 {
                 0% {
                   opacity: 1;
@@ -443,7 +458,7 @@ export default function TarotPage() {
                 }
               }
 
-              /* 旋转木马飞出到最终位置 - 右侧 */
+              /* Carousel fly-out right */
               @keyframes flyOutCarousel3 {
                 0% {
                   opacity: 1;
@@ -513,31 +528,31 @@ export default function TarotPage() {
           </div>
         )}
 
-        {/* 结果展示 */}
+        {/* Results */}
         {step === 'result' && (
           <div className="space-y-8">
-            {/* 显示问题 */}
+            {/* Question */}
             <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6">
-              <h3 className="text-lg font-semibold text-purple-200 mb-2">您的问题：</h3>
+              <h3 className="text-lg font-semibold text-purple-200 mb-2">Your Question:</h3>
               <p className="text-white">{question}</p>
             </div>
 
-            {/* 显示抽到的牌 */}
+            {/* Drawn cards */}
             <div className="grid md:grid-cols-3 gap-6">
               {drawnCards.map((drawnCard, index) => {
                 const card = drawnCard; // DrawnCard extends TarotCard
                 const isReversed = drawnCard.is_reversed || false;
 
-                // 生成塔罗牌图片URL（使用可靠的图片源）
+                // Build tarot card image URL
                 const getCardImageUrl = (cardNumber: number, suit: string, cardNameEn: string) => {
-                  // 将英文名称转换为URL友好格式
+                  // Convert to URL-friendly name
                   const urlFriendlyName = cardNameEn
                     .toLowerCase()
                     .replace(/\s+/g, '_')
                     .replace(/[^a-z0-9_]/g, '');
 
                   if (suit === 'major') {
-                    // 大阿卡纳：使用 tarot.com 的图片CDN
+                    // Major arcana: trustedtarot CDN
                     const majorArcanaMap: Record<number, string> = {
                       0: 'fool',
                       1: 'magician',
@@ -566,7 +581,7 @@ export default function TarotPage() {
                     return `https://www.trustedtarot.com/img/cards/${cardSlug}.png`;
                   }
 
-                  // 小阿卡纳：使用数字和花色组合
+                  // Minor arcana: number + suit
                   const suitMap: Record<string, string> = {
                     'wands': 'wands',
                     'cups': 'cups',
@@ -604,21 +619,21 @@ export default function TarotPage() {
                     key={card.id}
                     className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden card-hover"
                   >
-                    {/* 塔罗牌图片 */}
+                    {/* Tarot card image */}
                     <div
                       className="relative h-80 bg-gray-900 flex items-center justify-center"
                       style={isBlurred ? { filter: 'blur(8px)', userSelect: 'none', pointerEvents: 'none' } : {}}
                     >
                       <img
                         src={imageUrl}
-                        alt={card.name_cn}
+                        alt={card.name_en}
                         className="h-full w-auto object-contain"
                         onError={(e) => {
                           const img = e.target as HTMLImageElement;
-                          // 尝试备用图片源
+                          // Try fallback image
                           if (!img.dataset.fallbackAttempt) {
                             img.dataset.fallbackAttempt = '1';
-                            // 备用源1: 使用不同的CDN
+                            // Fallback 1: alternate CDN
                             const suit = card.suit;
                             const num = card.card_number;
                             if (suit === 'major') {
@@ -631,31 +646,31 @@ export default function TarotPage() {
                             }
                           } else if (img.dataset.fallbackAttempt === '1') {
                             img.dataset.fallbackAttempt = '2';
-                            // 备用源2: 显示美化的占位符
-                            img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="350"%3E%3Cdefs%3E%3ClinearGradient id="grad" x1="0%25" y1="0%25" x2="0%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:rgb(139,92,246);stop-opacity:1" /%3E%3Cstop offset="100%25" style="stop-color:rgb(236,72,153);stop-opacity:1" /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill="url(%23grad)" width="200" height="350" rx="10"/%3E%3Ctext fill="%23fff" x="50%25" y="45%25" text-anchor="middle" font-size="16" font-weight="bold"%3E' + encodeURIComponent(card.name_cn) + '%3C/text%3E%3Ctext fill="%23fff" x="50%25" y="55%25" text-anchor="middle" font-size="12" opacity="0.8"%3E' + encodeURIComponent(card.name_en) + '%3C/text%3E%3Ctext fill="%23fff" x="50%25" y="70%25" text-anchor="middle" font-size="40"%3E🎴%3C/text%3E%3C/svg%3E';
+                            // Fallback 2: styled placeholder
+                            img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="350"%3E%3Cdefs%3E%3ClinearGradient id="grad" x1="0%25" y1="0%25" x2="0%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:rgb(139,92,246);stop-opacity:1" /%3E%3Cstop offset="100%25" style="stop-color:rgb(236,72,153);stop-opacity:1" /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill="url(%23grad)" width="200" height="350" rx="10"/%3E%3Ctext fill="%23fff" x="50%25" y="48%25" text-anchor="middle" font-size="16" font-weight="bold"%3E' + encodeURIComponent(card.name_en) + '%3C/text%3E%3Ctext fill="%23fff" x="50%25" y="68%25" text-anchor="middle" font-size="40"%3E🎴%3C/text%3E%3C/svg%3E';
                           }
                         }}
                       />
-                      {/* 正逆位标识 */}
+                      {/* Upright/Reversed badge */}
                       <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold ${
                         isReversed ? 'bg-red-500/90' : 'bg-green-500/90'
                       } text-white shadow-lg`}>
-                        {isReversed ? '逆位' : '正位'}
+                        {isReversed ? 'Reversed' : 'Upright'}
                       </div>
                     </div>
 
-                    {/* 牌名和基本含义 */}
+                    {/* Card name and meaning */}
                     <div
                       className="p-5"
                       style={isBlurred ? { filter: 'blur(4px)', userSelect: 'none', pointerEvents: 'none' } : {}}
                     >
                       <h4 className="text-lg font-bold text-white mb-1 text-center">
-                        {card.name_cn}
+                        {card.name_en}
                       </h4>
                       <p className="text-xs text-purple-300 mb-3 text-center">{card.name_en}</p>
 
                       <p className="text-sm text-purple-100 text-center leading-relaxed">
-                        {card.description || '神秘的塔罗牌，蕴含着深刻的智慧与启示'}
+                        {getCardSummary(card, isReversed)}
                       </p>
                     </div>
                   </div>
@@ -663,11 +678,11 @@ export default function TarotPage() {
               })}
             </div>
 
-            {/* AI解读 */}
+            {/* Oracle interpretation */}
             <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 relative">
               <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <span className="mr-2">🔮</span>
-                AI大师解读
+                Oracle Interpretation
               </h3>
               <div
                 className="text-purple-100 leading-relaxed prose prose-invert max-w-none"
@@ -686,10 +701,10 @@ export default function TarotPage() {
                     li: ({node, ...props}) => <li className="text-purple-100" {...props} />,
                   }}
                 >
-                  {interpretation}
+                  {sanitizeEnglish(interpretation)}
                 </ReactMarkdown>
               </div>
-              {/* 模糊遮罩层 */}
+              {/* Blur overlay */}
               {isBlurred && (
                 <div
                   className="absolute inset-0 pointer-events-none rounded-2xl"
@@ -700,30 +715,30 @@ export default function TarotPage() {
               )}
             </div>
 
-            {/* 重新占卜按钮 */}
+            {/* Draw again button */}
             <div className="text-center">
               <button
                 onClick={handleReset}
                 className="px-8 py-3 bg-mystic-gradient rounded-lg text-white font-semibold hover:opacity-90 transition"
               >
-                重新占卜
+                Draw Again
               </button>
             </div>
           </div>
         )}
       </main>
 
-      {/* 登录提示弹窗 */}
+      {/* Sign-in modal */}
       {showLoginPrompt && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gradient-to-br from-purple-900/95 to-pink-900/95 backdrop-blur-md rounded-2xl border border-white/20 p-8 max-w-md w-full shadow-2xl">
             <div className="text-center mb-6">
               <div className="text-6xl mb-4">🔮✨</div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                免费体验已用完
+                Free Trial Exhausted
               </h3>
               <p className="text-purple-200 leading-relaxed">
-                您已使用完免费的塔罗占卜体验次数。登录后可继续使用此功能哦~ 😊💫
+                You have reached the free tarot limit. Sign in to continue the ritual. ✨
               </p>
             </div>
             <div className="space-y-3">
@@ -731,13 +746,13 @@ export default function TarotPage() {
                 href="/login"
                 className="block w-full py-3 bg-mystic-gradient rounded-lg text-white text-center font-semibold hover:opacity-90 transition"
               >
-                立即登录
+                Sign In Now
               </Link>
               <button
                 onClick={() => setShowLoginPrompt(false)}
                 className="w-full py-3 bg-white/10 rounded-lg text-white hover:bg-white/20 transition"
               >
-                稍后再说
+                Maybe Later
               </button>
             </div>
           </div>

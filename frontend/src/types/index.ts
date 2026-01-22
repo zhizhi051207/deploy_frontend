@@ -1,4 +1,4 @@
-// 用户类型
+// User type
 export interface User {
   id: number;
   username: string;
@@ -10,7 +10,7 @@ export interface User {
   updated_at: string;
 }
 
-// 注册请求
+// Register request
 export interface RegisterRequest {
   username: string;
   email: string;
@@ -20,13 +20,13 @@ export interface RegisterRequest {
   gender?: 'male' | 'female' | 'other';
 }
 
-// 登录请求
+// Login request
 export interface LoginRequest {
   email: string;
   password: string;
 }
 
-// 认证响应
+// Auth response
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -34,7 +34,7 @@ export interface AuthResponse {
   user?: User;
 }
 
-// 塔罗牌类型
+// Tarot card type
 export interface TarotCard {
   id: number;
   name_cn: string;
@@ -47,7 +47,7 @@ export interface TarotCard {
   description: string;
 }
 
-// 抽取的塔罗牌（包含正逆位）
+// Drawn tarot card (with orientation)
 export interface DrawnCard {
   card: TarotCard;
   position: number;
@@ -55,16 +55,16 @@ export interface DrawnCard {
   meaning: string;
 }
 
-// 塔罗牌阵类型
+// Tarot spread type
 export type SpreadType = 'single' | 'three-card' | 'celtic-cross';
 
-// 塔罗牌占卜请求
+// Tarot reading request
 export interface TarotReadingRequest {
   spread_type: SpreadType;
   question: string;
 }
 
-// 塔罗牌占卜响应
+// Tarot reading response
 export interface TarotReadingResponse {
   success: boolean;
   cards: DrawnCard[];
@@ -72,10 +72,10 @@ export interface TarotReadingResponse {
   reading_id?: number;
 }
 
-// 算命类型
+// Fortune type
 export type FortuneType = 'chat' | 'tarot';
 
-// AI算命请求
+// Oracle chat request
 export interface FortuneChatRequest {
   question: string;
   userInfo?: {
@@ -85,14 +85,14 @@ export interface FortuneChatRequest {
   };
 }
 
-// AI算命响应
+// Oracle chat response
 export interface FortuneChatResponse {
   success: boolean;
   result: string;
   fortune_id?: number;
 }
 
-// 算命历史记录
+// Fortune history
 export interface FortuneHistory {
   id: number;
   user_id: number;
@@ -102,7 +102,7 @@ export interface FortuneHistory {
   created_at: string;
 }
 
-// 塔罗牌占卜历史
+// Tarot reading history
 export interface TarotReading {
   id: number;
   user_id: number;
@@ -112,7 +112,7 @@ export interface TarotReading {
   created_at: string;
 }
 
-// 历史记录响应
+// History response
 export interface HistoryResponse {
   success: boolean;
   fortunes?: FortuneHistory[];
@@ -120,19 +120,19 @@ export interface HistoryResponse {
   total?: number;
 }
 
-// API错误响应
+// API error response
 export interface ApiError {
   success: false;
   error: string;
   message: string;
 }
 
-// API成功响应基础类型
+// API success response base
 export interface ApiSuccess<T = any> {
   success: true;
   data?: T;
   message?: string;
 }
 
-// 通用API响应
+// Generic API response
 export type ApiResponse<T = any> = ApiSuccess<T> | ApiError;

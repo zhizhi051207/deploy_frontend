@@ -28,10 +28,10 @@ export default function LoginPage() {
         localStorage.setItem('token', data.token);
         router.push('/dashboard');
       } else {
-        setError(data.error || '登录失败');
+        setError(data.error || 'Sign in failed');
       }
     } catch (err) {
-      setError('网络错误，请稍后重试');
+      setError('Network error, please try again.');
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-        <h1 className="text-3xl font-bold text-white text-center mb-8">登录账号</h1>
+        <h1 className="text-3xl font-bold text-white text-center mb-8">Sign In</h1>
 
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-purple-200 mb-2">邮箱</label>
+            <label className="block text-purple-200 mb-2">Email</label>
             <input
               type="email"
               required
@@ -61,7 +61,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-purple-200 mb-2">密码</label>
+            <label className="block text-purple-200 mb-2">Password</label>
             <input
               type="password"
               required
@@ -76,14 +76,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 bg-mystic-gradient rounded-lg text-white font-semibold hover:opacity-90 transition disabled:opacity-50"
           >
-            {loading ? '登录中...' : '登录'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-purple-200">
-          还没有账号？
+          Don’t have an account?
           <Link href="/register" className="text-pink-400 hover:text-pink-300 ml-1">
-            立即注册
+            Create one now
           </Link>
         </p>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
           href="/"
           className="block mt-4 text-center text-purple-300 hover:text-purple-200"
         >
-          返回首页
+          Return to Home
         </Link>
       </div>
     </div>

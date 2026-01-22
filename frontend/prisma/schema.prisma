@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           BigInt          @id @default(autoincrement()) @db.BigInt
+  username     String           @unique @db.VarChar(50)
+  email        String           @unique @db.VarChar(100)
+  password_hash String          @db.VarChar(255)
+  birth_date   DateTime?        @db.Date
+  birth_time   String?          @db.VarChar(10)
+  gender       String?          @db.VarChar(10)
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+  fortune_history FortuneHistory[]
+  tarot_readings TarotReading[]
+
+  @@map("users")
+}
+
+model FortuneHistory {
+  id           BigInt   @id @default(autoincrement()) @db.BigInt
+  user_id      BigInt   @db.BigInt
+  fortune_type String   @db.VarChar(20)
+  question     String?  @db.Text
+  result       String   @db.Text
+  created_at   DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("fortune_history")
+}
+
+model TarotCard {
+  id              BigInt  @id @default(autoincrement()) @db.BigInt
+  name_cn         String  @db.VarChar(50)
+  name_en         String  @db.VarChar(50)
+  card_number     Int
+  suit            String  @db.VarChar(20)
+  upright_meaning String  @db.Text
+  reversed_meaning String @db.Text
+  image_url       String? @db.VarChar(255)
+  description     String? @db.Text
+
+  @@map("tarot_cards")
+}
+
+model TarotReading {
+  id            BigInt   @id @default(autoincrement()) @db.BigInt
+  user_id       BigInt   @db.BigInt
+  spread_type   String   @db.VarChar(50)
+  cards_drawn   Json
+  interpretation String  @db.Text
+  created_at    DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("tarot_readings")
+}

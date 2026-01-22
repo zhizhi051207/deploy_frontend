@@ -4,15 +4,15 @@ import { User } from '@/types';
 import { NextRequest } from 'next/server';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_EXPIRES_IN = '7d'; // Token有效期7天
+const JWT_EXPIRES_IN = '7d'; // Token expiry: 7 days
 const SALT_ROUNDS = 10;
 
-// 加密密码
+// Hash password
 export async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-// 验证密码
+// Verify password
 export async function verifyPassword(
   password: string,
   hashedPassword: string
@@ -20,7 +20,7 @@ export async function verifyPassword(
   return await bcrypt.compare(password, hashedPassword);
 }
 
-// 生成JWT Token
+// Generate JWT token
 export function generateToken(user: User): string {
   const payload = {
     userId: user.id,
@@ -31,7 +31,7 @@ export function generateToken(user: User): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-// 验证JWT Token
+// Verify JWT token
 export function verifyToken(token: string): any {
   try {
     return jwt.verify(token, JWT_SECRET);
@@ -40,15 +40,15 @@ export function verifyToken(token: string): any {
   }
 }
 
-// 从请求中提取Token
+// Extract token from request
 export function extractTokenFromRequest(request: NextRequest): string | null {
-  // 从Authorization header中提取
+  // From Authorization header
   const authHeader = request.headers.get('authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authHeader.substring(7);
   }
 
-  // 从cookies中提取
+  // From cookies
   const cookieToken = request.cookies.get('token')?.value;
   if (cookieToken) {
     return cookieToken;
@@ -57,7 +57,7 @@ export function extractTokenFromRequest(request: NextRequest): string | null {
   return null;
 }
 
-// 从请求中获取当前用户
+// Get current user from request
 export function getCurrentUserFromRequest(request: NextRequest): any {
   const token = extractTokenFromRequest(request);
   if (!token) {
@@ -67,24 +67,24 @@ export function getCurrentUserFromRequest(request: NextRequest): any {
   return verifyToken(token);
 }
 
-// 验证邮箱格式
+// Validate email format
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-// 验证密码强度（至少6位）
+// Validate password strength (min 6 chars)
 export function isValidPassword(password: string): boolean {
   return password.length >= 6;
 }
 
-// 验证用户名（3-50位，只允许字母数字下划线）
+// Validate username (3-50 chars, alphanumeric + underscore)
 export function isValidUsername(username: string): boolean {
   const usernameRegex = /^[a-zA-Z0-9_]{3,50}$/;
   return usernameRegex.test(username);
 }
 
-// 创建认证中间件响应
+// Create auth middleware response
 export function createAuthResponse(message: string, status: number = 401) {
   return new Response(
     JSON.stringify({ success: false, error: message }),
@@ -95,7 +95,7 @@ export function createAuthResponse(message: string, status: number = 401) {
   );
 }
 
-// 创建成功响应
+// Create success response
 export function createSuccessResponse(data: any, status: number = 200) {
   return new Response(
     JSON.stringify({ success: true, ...data }),
@@ -106,7 +106,7 @@ export function createSuccessResponse(data: any, status: number = 200) {
   );
 }
 
-// 创建错误响应
+// Create error response
 export function createErrorResponse(message: string, status: number = 400) {
   return new Response(
     JSON.stringify({ success: false, error: message }),

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { prisma } from '@/lib/db';
 import {
   getCurrentUserFromRequest,
   createAuthResponse,
@@ -8,142 +8,118 @@ import {
 } from '@/lib/auth';
 import { FortuneHistory, TarotReading } from '@/types';
 
+function formatFortune(row: any): FortuneHistory {
+  return {
+    ...row,
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+  } as FortuneHistory;
+}
+
+function formatTarot(row: any): TarotReading {
+  return {
+    ...row,
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+    cards_drawn: typeof row.cards_drawn === 'string' ? JSON.parse(row.cards_drawn) : row.cards_drawn,
+  } as TarotReading;
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // 获取当前用户
     const currentUser = getCurrentUserFromRequest(request);
 
     if (!currentUser) {
-      return createAuthResponse('未授权，请先登录');
+      return createAuthResponse('Unauthorized. Please sign in.');
     }
 
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type'); // 'chat', 'tarot', or null for all
+    const type = searchParams.get('type');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let fortunes: FortuneHistory[] = [];
     let tarotReadings: TarotReading[] = [];
 
-    // 查询AI算命历史
     if (!type || type === 'chat') {
-      const { data, error } = await supabaseAdmin
-        .from('fortune_history')
-        .select('*')
-        .eq('user_id', currentUser.userId)
-        .eq('fortune_type', 'chat')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (error) {
-        return createErrorResponse('获取算命历史失败: ' + error.message, 500);
-      }
-
-      fortunes = (data || []) as FortuneHistory[];
+      const data = await prisma.fortuneHistory.findMany({
+        where: { user_id: BigInt(currentUser.userId), fortune_type: 'chat' },
+        orderBy: { created_at: 'desc' },
+        take: limit,
+        skip: offset,
+      });
+      fortunes = data.map(formatFortune);
     }
 
-    // 查询塔罗牌占卜历史
     if (!type || type === 'tarot') {
-      const { data, error } = await supabaseAdmin
-        .from('tarot_readings')
-        .select('*')
-        .eq('user_id', currentUser.userId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (error) {
-        return createErrorResponse('获取塔罗记录失败: ' + error.message, 500);
-      }
-
-      tarotReadings = (data || []).map(row => ({
-        ...row,
-        cards_drawn: typeof row.cards_drawn === 'string'
-          ? JSON.parse(row.cards_drawn)
-          : row.cards_drawn,
-      })) as TarotReading[];
+      const data = await prisma.tarotReading.findMany({
+        where: { user_id: BigInt(currentUser.userId) },
+        orderBy: { created_at: 'desc' },
+        take: limit,
+        skip: offset,
+      });
+      tarotReadings = data.map(formatTarot);
     }
 
-    // 获取总数
     const totalFortunes = !type || type === 'chat'
-      ? await supabaseAdmin
-          .from('fortune_history')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', currentUser.userId)
-          .eq('fortune_type', 'chat')
-      : { count: 0 } as any;
+      ? await prisma.fortuneHistory.count({
+          where: { user_id: BigInt(currentUser.userId), fortune_type: 'chat' },
+        })
+      : 0;
 
     const totalTarot = !type || type === 'tarot'
-      ? await supabaseAdmin
-          .from('tarot_readings')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', currentUser.userId)
-      : { count: 0 } as any;
+      ? await prisma.tarotReading.count({
+          where: { user_id: BigInt(currentUser.userId) },
+        })
+      : 0;
 
     return createSuccessResponse({
       fortunes,
       tarot_readings: tarotReadings,
       total: {
-        fortunes: (totalFortunes as any).count || 0,
-        tarot: (totalTarot as any).count || 0,
+        fortunes: totalFortunes,
+        tarot: totalTarot,
       },
     });
 
   } catch (error: any) {
     console.error('Get history error:', error);
-    return createErrorResponse('获取历史记录失败: ' + error.message, 500);
+    return createErrorResponse('Failed to fetch history: ' + error.message, 500);
   }
 }
 
-// 删除历史记录
 export async function DELETE(request: NextRequest) {
   try {
-    // 获取当前用户
     const currentUser = getCurrentUserFromRequest(request);
 
     if (!currentUser) {
-      return createAuthResponse('未授权，请先登录');
+      return createAuthResponse('Unauthorized. Please sign in.');
     }
 
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type'); // 'fortune' or 'tarot'
+    const type = searchParams.get('type');
     const id = searchParams.get('id');
 
     if (!type || !id) {
-      return createErrorResponse('缺少必要参数');
+      return createErrorResponse('Missing required parameters');
     }
 
     if (type === 'fortune') {
-      // 删除算命记录
-      const { error } = await supabaseAdmin
-        .from('fortune_history')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', currentUser.userId);
-
-      if (error) {
-        return createErrorResponse('删除失败: ' + error.message, 500);
-      }
+      await prisma.fortuneHistory.deleteMany({
+        where: { id: BigInt(id), user_id: BigInt(currentUser.userId) },
+      });
     } else if (type === 'tarot') {
-      // 删除塔罗牌记录
-      const { error } = await supabaseAdmin
-        .from('tarot_readings')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', currentUser.userId);
-
-      if (error) {
-        return createErrorResponse('删除失败: ' + error.message, 500);
-      }
+      await prisma.tarotReading.deleteMany({
+        where: { id: BigInt(id), user_id: BigInt(currentUser.userId) },
+      });
     } else {
-      return createErrorResponse('无效的类型参数');
+      return createErrorResponse('Invalid type parameter');
     }
 
-    return createSuccessResponse({
-      message: '删除成功',
-    });
+    return createSuccessResponse({ message: 'Deleted successfully' });
 
   } catch (error: any) {
     console.error('Delete history error:', error);
-    return createErrorResponse('删除历史记录失败: ' + error.message, 500);
+    return createErrorResponse('Failed to delete history: ' + error.message, 500);
   }
 }

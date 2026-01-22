@@ -32,7 +32,7 @@ body {
   }
 }
 
-/* 自定义滚动条 */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -51,7 +51,7 @@ body {
   background: #7c3aed;
 }
 
-/* 卡片悬浮效果 */
+/* Card hover */
 .card-hover {
   transition: all 0.3s ease;
 }
@@ -61,14 +61,14 @@ body {
   box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
 }
 
-/* 神秘光晕效果 */
+/* Mystic glow */
 .mystic-glow {
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.5),
               0 0 40px rgba(217, 70, 239, 0.3),
               0 0 60px rgba(139, 92, 246, 0.1);
 }
 
-/* 加载动画 */
+/* Loading animation */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -77,7 +77,7 @@ body {
   animation: spin 3s linear infinite;
 }
 
-/* 渐入动画 */
+/* Fade-in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;

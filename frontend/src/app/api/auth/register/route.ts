@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { prisma } from '@/lib/db';
 import {
   hashPassword,
   generateToken,
@@ -16,90 +16,82 @@ export async function POST(request: NextRequest) {
     const body: RegisterRequest = await request.json();
     const { username, email, password, birth_date, birth_time, gender } = body;
 
-    // 验证必填字段
     if (!username || !email || !password) {
-      return createErrorResponse('用户名、邮箱和密码为必填项');
+      return createErrorResponse('Username, email, and password are required');
     }
 
-    // 验证用户名格式
     if (!isValidUsername(username)) {
-      return createErrorResponse('用户名只能包含字母、数字和下划线，长度为3-50位');
+      return createErrorResponse('Username may contain letters, numbers, and underscores (3-50 chars)');
     }
 
-    // 验证邮箱格式
     if (!isValidEmail(email)) {
-      return createErrorResponse('邮箱格式不正确');
+      return createErrorResponse('Invalid email format');
     }
 
-    // 验证密码强度
     if (!isValidPassword(password)) {
-      return createErrorResponse('密码长度至少为6位');
+      return createErrorResponse('Password must be at least 6 characters');
     }
 
-    // 检查用户名是否已存在
-    const { data: existingUsername, error: usernameError } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('username', username)
-      .limit(1);
-
-    if (usernameError) {
-      return createErrorResponse('数据库错误: ' + usernameError.message, 500);
+    const existingUsername = await prisma.user.findUnique({
+      where: { username },
+      select: { id: true },
+    });
+    if (existingUsername) {
+      return createErrorResponse('Username is already taken');
     }
 
-    if (existingUsername && existingUsername.length > 0) {
-      return createErrorResponse('用户名已被使用');
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (existingEmail) {
+      return createErrorResponse('Email is already registered');
     }
 
-    // 检查邮箱是否已存在
-    const { data: existingEmail, error: emailError } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .limit(1);
-
-    if (emailError) {
-      return createErrorResponse('数据库错误: ' + emailError.message, 500);
-    }
-
-    if (existingEmail && existingEmail.length > 0) {
-      return createErrorResponse('邮箱已被注册');
-    }
-
-    // 加密密码
     const password_hash = await hashPassword(password);
 
-    // 插入新用户并返回
-    const { data: newUser, error: insertError } = await supabaseAdmin
-      .from('users')
-      .insert({
+    const newUser = await prisma.user.create({
+      data: {
         username,
         email,
         password_hash,
-        birth_date: birth_date || null,
+        birth_date: birth_date ? new Date(birth_date) : null,
         birth_time: birth_time || null,
         gender: gender || null,
-      })
-      .select('id, username, email, birth_date, birth_time, gender, created_at, updated_at')
-      .single();
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        birth_date: true,
+        birth_time: true,
+        gender: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
 
-    if (insertError || !newUser) {
-      return createErrorResponse('创建用户失败: ' + (insertError?.message || '未知错误'), 500);
-    }
+    const user: User = {
+      id: Number(newUser.id),
+      username: newUser.username,
+      email: newUser.email,
+      birth_date: newUser.birth_date ? newUser.birth_date.toISOString().split('T')[0] : undefined,
+      birth_time: newUser.birth_time || undefined,
+      gender: newUser.gender as any,
+      created_at: newUser.created_at.toISOString(),
+      updated_at: newUser.updated_at.toISOString(),
+    };
 
-    const user = newUser as User;
-
-    // 生成Token
     const token = generateToken(user);
 
     return createSuccessResponse({
-      message: '注册成功',
+      message: 'Account created successfully',
       token,
       user,
     }, 201);
 
   } catch (error: any) {
     console.error('Register error:', error);
-    return createErrorResponse('服务器错误: ' + error.message, 500);
+    return createErrorResponse('Server error: ' + error.message, 500);
   }
 }
