@@ -1,16 +1,19 @@
 import OpenAI from 'openai';
 
-// Qianwen API config
-const QIANWEN_API_KEY = process.env.QIANWEN_API_KEY || '';
-const QIANWEN_API_URL = process.env.QIANWEN_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+// OpenRouter API config
+const OPENROUTER_API_KEY =
+  process.env.OPENROUTER_API_KEY ||
+  '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';
+const OPENROUTER_API_URL =
+  process.env.OPENROUTER_API_URL || 'https://openrouter.ai/api/v1';
 
-// Model - Qianwen Plus (balanced for oracle scenarios)
-const MODEL_NAME = 'qwen-plus';
+// Model - DeepSeek (via OpenRouter)
+const MODEL_NAME = 'deepseek/deepseek-chat';
 
-// Create OpenAI client (Qianwen compatible)
+// Create OpenAI-compatible client (OpenRouter)
 const client = new OpenAI({
-  apiKey: QIANWEN_API_KEY,
-  baseURL: QIANWEN_API_URL,
+  apiKey: OPENROUTER_API_KEY,
+  baseURL: OPENROUTER_API_URL,
 });
 
 // Fortune system prompt
