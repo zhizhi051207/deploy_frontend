@@ -40,6 +40,10 @@ export default function HistoryPage() {
   const [followUpAnswer, setFollowUpAnswer] = useState('');
   const [followUpLoading, setFollowUpLoading] = useState(false);
   const [followUpError, setFollowUpError] = useState('');
+  const [tarotFollowUpQuestion, setTarotFollowUpQuestion] = useState('');
+  const [tarotFollowUpAnswer, setTarotFollowUpAnswer] = useState('');
+  const [tarotFollowUpLoading, setTarotFollowUpLoading] = useState(false);
+  const [tarotFollowUpError, setTarotFollowUpError] = useState('');
   const fetchHistory = async () => {
     try {
       if (!hasCache) {
@@ -135,11 +139,20 @@ export default function HistoryPage() {
     setFollowUpQuestion('');
     setFollowUpAnswer('');
     setFollowUpError('');
+    setTarotFollowUpQuestion('');
+    setTarotFollowUpAnswer('');
+    setTarotFollowUpError('');
   };
 
   const openTarotDetail = (item: TarotReading) => {
     setSelectedTarot(item);
     setSelectedFortune(null);
+    setFollowUpQuestion('');
+    setFollowUpAnswer('');
+    setFollowUpError('');
+    setTarotFollowUpQuestion('');
+    setTarotFollowUpAnswer('');
+    setTarotFollowUpError('');
   };
 
   const closeDetail = () => {
@@ -149,6 +162,10 @@ export default function HistoryPage() {
     setFollowUpAnswer('');
     setFollowUpError('');
     setFollowUpLoading(false);
+    setTarotFollowUpQuestion('');
+    setTarotFollowUpAnswer('');
+    setTarotFollowUpError('');
+    setTarotFollowUpLoading(false);
   };
 
   const handleFollowUp = async () => {
@@ -183,6 +200,41 @@ export default function HistoryPage() {
       setFollowUpError(err.message || 'Failed to get response');
     } finally {
       setFollowUpLoading(false);
+    }
+  };
+
+  const handleTarotFollowUp = async () => {
+    if (!selectedTarot) return;
+    const question = tarotFollowUpQuestion.trim();
+    if (!question) {
+      setTarotFollowUpError('Please enter your question');
+      return;
+    }
+    if (question.length > 500) {
+      setTarotFollowUpError('Question cannot exceed 500 characters');
+      return;
+    }
+    try {
+      setTarotFollowUpLoading(true);
+      setTarotFollowUpError('');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/history/tarot-followup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ history_id: selectedTarot.id, question }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get response');
+      }
+      setTarotFollowUpAnswer(data.answer || 'No response');
+    } catch (err: any) {
+      setTarotFollowUpError(err.message || 'Failed to get response');
+    } finally {
+      setTarotFollowUpLoading(false);
     }
   };
 
@@ -308,10 +360,40 @@ export default function HistoryPage() {
                 )}
 
                 {selectedTarot && (
-                  <div className="space-y-4">
-                    <p className="text-white font-semibold">Spread: {selectedTarot.spread_type}</p>
-                    <div className="text-purple-100 prose prose-invert max-w-none">
-                      <ReactMarkdown>{selectedTarot.interpretation}</ReactMarkdown>
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                    <div className="space-y-4">
+                      <p className="text-white font-semibold">Spread: {selectedTarot.spread_type}</p>
+                      <div className="text-purple-100 prose prose-invert max-w-none">
+                        <ReactMarkdown>{selectedTarot.interpretation}</ReactMarkdown>
+                      </div>
+                    </div>
+
+                    <div className="lg:sticky lg:top-6 h-fit">
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <h3 className="text-white font-semibold mb-2">Ask a follow-up</h3>
+                        <textarea
+                          value={tarotFollowUpQuestion}
+                          onChange={(e) => setTarotFollowUpQuestion(e.target.value)}
+                          placeholder="Ask about your tarot reading..."
+                          className="w-full min-h-[120px] bg-white/10 border border-white/10 rounded-lg p-3 text-white placeholder:text-purple-200/70 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        {tarotFollowUpError && (
+                          <p className="text-red-400 text-sm mt-2">{tarotFollowUpError}</p>
+                        )}
+                        <button
+                          onClick={handleTarotFollowUp}
+                          disabled={tarotFollowUpLoading}
+                          className="mt-3 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition disabled:opacity-60"
+                        >
+                          {tarotFollowUpLoading ? 'Thinking...' : 'Ask the Oracle'}
+                        </button>
+
+                        {tarotFollowUpAnswer && (
+                          <div className="mt-4 text-purple-100 prose prose-invert max-w-none">
+                            <ReactMarkdown>{tarotFollowUpAnswer}</ReactMarkdown>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

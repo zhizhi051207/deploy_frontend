@@ -131,6 +131,19 @@ Your response should:
 4. Provide concise guidance (300-600 words)
 5. Avoid repeating the full original reading`;
 
+// Tarot follow-up system prompt
+const TAROT_FOLLOWUP_PROMPT = `You are an experienced tarot reader.
+Use English only. Do not include any non-English characters.
+
+The user already received a full tarot reading. Answer their follow-up question by referencing the prior tarot interpretation and the cards drawn.
+
+Your response should:
+1. Be clear, supportive, and actionable
+2. Reference the prior tarot reading explicitly when relevant
+3. Address the follow-up question directly
+4. Provide concise guidance (300-600 words)
+5. Avoid repeating the full original reading`;
+
 
 // Oracle chat
 export async function fortuneChat(
@@ -208,6 +221,7 @@ export async function interpretTarot(
     name_en: string;
     isReversed: boolean;
     position: number;
+
     upright_meaning: string;
     reversed_meaning: string;
   }>,
@@ -257,6 +271,37 @@ Please provide a professional, in-depth tarot interpretation based on the above.
     throw new Error(`Tarot service unavailable: ${error.message}`);
   }
 }
+
+// Tarot follow-up based on history
+export async function answerTarotFollowUp(
+  spreadType: string,
+  cardsDrawn: any[],
+  originalInterpretation: string,
+  followUpQuestion: string
+): Promise<string> {
+  try {
+    const cardsText = Array.isArray(cardsDrawn)
+      ? cardsDrawn.map((card) => JSON.stringify(card)).join('\n')
+      : String(cardsDrawn || '');
+    const userMessage = `Original spread: ${spreadType}\n\nCards drawn:\n${cardsText}\n\nOriginal interpretation:\n${originalInterpretation}\n\nFollow-up question:\n${followUpQuestion}\n\nPlease answer the follow-up by referencing the original tarot reading.`;
+
+    const response = await client.chat.completions.create({
+      model: MODEL_NAME,
+      messages: [
+        { role: 'system', content: TAROT_FOLLOWUP_PROMPT },
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+
+    return response.choices[0]?.message?.content || 'Sorry, we could not retrieve your answer. Please try again later.';
+  } catch (error: any) {
+    console.error('Qianwen API Error:', error);
+    throw new Error(`Oracle service unavailable: ${error.message}`);
+  }
+}
+
 
 // Test API connectivity
 export async function testQianwenAPI(): Promise<boolean> {
