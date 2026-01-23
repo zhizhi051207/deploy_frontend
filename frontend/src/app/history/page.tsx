@@ -240,83 +240,85 @@ export default function HistoryPage() {
           </button>
         </div>
 
+
         {(selectedFortune || selectedTarot) && (
           <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
-            <div className="bg-slate-900/95 border border-white/10 rounded-2xl w-full max-w-5xl max-h-[85vh] overflow-y-auto p-6 relative">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {selectedFortune ? 'Oracle Chronicle' : 'Tarot Chronicle'}
-                  </h2>
-                  <p className="text-purple-200 text-sm">
-                    {selectedFortune
-                      ? new Date(selectedFortune.created_at).toLocaleString()
-                      : selectedTarot
-                      ? new Date(selectedTarot.created_at).toLocaleString()
-                      : ''}
-                  </p>
-                </div>
-              </div>
-
+            <div className="bg-slate-900/95 border border-white/10 rounded-2xl w-full max-w-5xl max-h-[85vh] relative">
               <button
                 onClick={closeDetail}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white text-lg leading-none"
+                className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white text-lg leading-none"
                 aria-label="Close details"
               >
                 ×
               </button>
 
-              {selectedFortune && (
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+              <div className="max-h-[85vh] overflow-y-auto p-6 pt-12">
+                <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
-                    <p className="text-white font-semibold mb-2">Question: {selectedFortune.question}</p>
+                    <h2 className="text-2xl font-bold text-white">
+                      {selectedFortune ? 'Oracle Chronicle' : 'Tarot Chronicle'}
+                    </h2>
+                    <p className="text-purple-200 text-sm">
+                      {selectedFortune
+                        ? new Date(selectedFortune.created_at).toLocaleString()
+                        : selectedTarot
+                        ? new Date(selectedTarot.created_at).toLocaleString()
+                        : ''}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedFortune && (
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                    <div>
+                      <p className="text-white font-semibold mb-2">Question: {selectedFortune.question}</p>
+                      <div className="text-purple-100 prose prose-invert max-w-none">
+                        <ReactMarkdown>{selectedFortune.result}</ReactMarkdown>
+                      </div>
+                    </div>
+
+                    <div className="lg:sticky lg:top-6 h-fit">
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <h3 className="text-white font-semibold mb-2">Ask a follow-up</h3>
+                        <textarea
+                          value={followUpQuestion}
+                          onChange={(e) => setFollowUpQuestion(e.target.value)}
+                          placeholder="Ask about your reading..."
+                          className="w-full min-h-[120px] bg-white/10 border border-white/10 rounded-lg p-3 text-white placeholder:text-purple-200/70 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        {followUpError && (
+                          <p className="text-red-400 text-sm mt-2">{followUpError}</p>
+                        )}
+                        <button
+                          onClick={handleFollowUp}
+                          disabled={followUpLoading}
+                          className="mt-3 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition disabled:opacity-60"
+                        >
+                          {followUpLoading ? 'Thinking...' : 'Ask the Oracle'}
+                        </button>
+
+                        {followUpAnswer && (
+                          <div className="mt-4 text-purple-100 prose prose-invert max-w-none">
+                            <ReactMarkdown>{followUpAnswer}</ReactMarkdown>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedTarot && (
+                  <div className="space-y-4">
+                    <p className="text-white font-semibold">Spread: {selectedTarot.spread_type}</p>
                     <div className="text-purple-100 prose prose-invert max-w-none">
-                      <ReactMarkdown>{selectedFortune.result}</ReactMarkdown>
+                      <ReactMarkdown>{selectedTarot.interpretation}</ReactMarkdown>
                     </div>
                   </div>
-
-                  <div className="lg:sticky lg:top-6 h-fit">
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                      <h3 className="text-white font-semibold mb-2">Ask a follow-up</h3>
-                      <textarea
-                        value={followUpQuestion}
-                        onChange={(e) => setFollowUpQuestion(e.target.value)}
-                        placeholder="Ask about your reading..."
-                        className="w-full min-h-[120px] bg-white/10 border border-white/10 rounded-lg p-3 text-white placeholder:text-purple-200/70 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      />
-                      {followUpError && (
-                        <p className="text-red-400 text-sm mt-2">{followUpError}</p>
-                      )}
-                      <button
-                        onClick={handleFollowUp}
-                        disabled={followUpLoading}
-                        className="mt-3 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition disabled:opacity-60"
-                      >
-                        {followUpLoading ? 'Thinking...' : 'Ask the Oracle'}
-                      </button>
-
-                      {followUpAnswer && (
-                        <div className="mt-4 text-purple-100 prose prose-invert max-w-none">
-                          <ReactMarkdown>{followUpAnswer}</ReactMarkdown>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedTarot && (
-                <div className="space-y-4">
-                  <p className="text-white font-semibold">Spread: {selectedTarot.spread_type}</p>
-                  <div className="text-purple-100 prose prose-invert max-w-none">
-                    <ReactMarkdown>{selectedTarot.interpretation}</ReactMarkdown>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
-
 
         {showLoading && fortunes.length === 0 && tarotReadings.length === 0 && (
           <div className="text-center text-purple-200">Loading...</div>
