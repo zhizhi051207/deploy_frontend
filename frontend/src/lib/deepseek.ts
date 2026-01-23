@@ -118,6 +118,20 @@ Your reading should:
 
 Please follow the structure exactly and output in Markdown (## headings, **bold**, *italic*, --- separators).`;
 
+// Follow-up system prompt
+const FOLLOWUP_SYSTEM_PROMPT = `You are a seasoned and compassionate oracle.
+Use English only. Do not include any non-English characters.
+
+The user already received a full reading. Answer their follow-up question by referencing the prior reading and clarifying any points.
+
+Your response should:
+1. Be clear, supportive, and actionable
+2. Reference the prior reading explicitly when relevant
+3. Address the follow-up question directly
+4. Provide concise guidance (300-600 words)
+5. Avoid repeating the full original reading`;
+
+
 // Oracle chat
 export async function fortuneChat(
   question: string,
@@ -159,6 +173,33 @@ export async function fortuneChat(
     throw new Error(`Oracle service unavailable: ${error.message}`);
   }
 }
+
+// Oracle follow-up based on history
+export async function answerFortuneFollowUp(
+  originalQuestion: string,
+  originalResult: string,
+  followUpQuestion: string
+): Promise<string> {
+  try {
+    const userMessage = `Original question:\n${originalQuestion}\n\nOriginal reading:\n${originalResult}\n\nFollow-up question:\n${followUpQuestion}\n\nPlease answer the follow-up by referencing the original reading.`;
+
+    const response = await client.chat.completions.create({
+      model: MODEL_NAME,
+      messages: [
+        { role: 'system', content: FOLLOWUP_SYSTEM_PROMPT },
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+
+    return response.choices[0]?.message?.content || 'Sorry, we could not retrieve your answer. Please try again later.';
+  } catch (error: any) {
+    console.error('Qianwen API Error:', error);
+    throw new Error(`Oracle service unavailable: ${error.message}`);
+  }
+}
+
 
 // Tarot interpretation
 export async function interpretTarot(

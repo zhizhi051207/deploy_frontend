@@ -41,6 +41,34 @@ export default function DashboardPage() {
     fetchUser();
   }, [router]);
 
+  useEffect(() => {
+    router.prefetch('/history');
+  }, [router]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const fetchHistoryCache = async () => {
+      try {
+        const res = await fetch('/api/history', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success) {
+          sessionStorage.setItem(
+            'history_cache',
+            JSON.stringify({ ts: Date.now(), data })
+          );
+        }
+      } catch (error) {
+        // ignore cache errors
+      }
+    };
+
+    fetchHistoryCache();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     router.push('/');
@@ -150,12 +178,12 @@ export default function DashboardPage() {
           {/* History */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <h3 className="text-2xl font-bold text-white mb-4">Recent Chronicles</h3>
-            <Link
-              href="/history"
+            <button
+              onClick={() => router.push('/history')}
               className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
             >
               View All Chronicles
-            </Link>
+            </button>
           </div>
         </div>
       </main>
