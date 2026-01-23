@@ -74,7 +74,7 @@ export default function HomePage() {
           </p>
           {!isLoggedIn && (
             <Link
-              href="/register"
+              href="/login"
               className="inline-block px-8 py-4 rounded-lg bg-mystic-gradient text-white text-lg font-semibold hover:opacity-90 transition mystic-glow"
             >
               Begin Your Reading
